@@ -1,0 +1,218 @@
+---
+title: Design of Entity & DTO
+sidebar_position: 1
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+## Background
+
+최근 [Hexagonal Architecture](<https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)>)는 확장성이 높고, 안정적인 MSA 아키텍처를 구축하기 위해 많이 사용됩니다.
+
+![hexagonal architecture](/img/backend/Hexagonal_Architecture.svg)
+
+RDBMS를 활용한 Application Core 같은 경우 Adaptor를 거쳐 데이터가 DB Entity로 변경되거나 또는 DTO로 변경됩니다. RDBMS에서 Entity와 DTO는 항상 동일 할 수 없습니다. 1:N, M:N과 같은 관계를 표현할 때 DTO는 복잡한 relation 테이블을 감추고 계층 구조로 표현하는 경우가 많아 둘은 다른 형태로 관리됩니다.
+
+decorator를 사용하여 Entity와 DTO를 관리하는 것이 일반적인 방법입니다. 하지만 이 방법은 DTO의 상속과 합성을 위해 필요한 학습 곡선이 높고, Entity가 변경되었을 때 그 변경이 DTO에 반영되지 않을 수 있습니다. 또한 1:N, M:N 등의 관계 표현을 위해서 여러 계층으로 구성된 DTO를 작성하였을 때 Schema Validation과 합성에 필요한 boilerplate code가 어렵고 많습니다.
+
+그래서 학습 곡선이 작고, 합성, 상속 참조 등 다양한 상황에서 유연하게 사용 가능한 DTO 작성 법이 필요합니다. 또한 DTO 작성과 문서화 및 Validation이 동시에 이뤄져야 하며 Entity 변경 사항이 compile-time에 오류 또는 경고로 개발자가 인지할 수 있어야 합니다.
+
+TypeScript는 인터페이스를 사용해서 타입을 선언할 수 있고 확장과 합성을 통해 유연한 타입 선언 기능을 제공합니다. 본 문서에서는 TypeScript가 인터페이스를 사용해서 유연하고 확장하기 쉬운 Entity, DTO 사용법에 대해서 정리하고 boilerplate code 작성을 최소화하고 문서화, Validation 까지 한 번에 할 수 있는 방법을 살펴볼 것입니다.
+
+## Requirements
+
+본 문서에서는 ORM 패키지로 TypeORM을 사용합니다. TypeORM Entity 작성을 위해 class, decorator를 사용하지 않고 EntitySchema 클래스를 사용합니다. 이는 개인의 선호에 따른 것으로, 저는 EntitySchema 사용을 더 선호합니다. 또한 OpenAPI 문서화 및 Schema Validationd을 위해 ts-json-schema-generator를 사용합니다.
+
+또한 이해를 돕기 위해 예제로 널리 사용되는 [Pet Store](https://petstore.swagger.io/#/)를 전체 또는 일부 구현하는 것을 목표로 설명할 것입니다.
+
+## Entity
+
+Pet Store는 많은 엔티티가 있지만 문서에서는 Pet, Category, Tag를 먼저 다뤄볼 것입니다. Category, Tag 엔티티는 다음과 같이 인터페이스로 정의할 수 있습니다.
+
+```ts
+export interface IBaseEntity {
+  /**
+   * id
+   *
+   * @asType integer
+   */
+  id: number;
+}
+
+/**
+ * Category of Pet, Store
+ */
+export interface ICategory {
+  id: IBaseEntity["id"];
+
+  /**
+   * Category name
+   *
+   * @maxLength 200
+   * @minLength 2
+   */
+  name: string;
+}
+
+/**
+ * Tag of Pet, Store
+ */
+export interface ITag {
+  id: IBaseEntity["id"];
+
+  /**
+   * Tag name
+   *
+   * @maxLength 200
+   * @minLength 3
+   */
+  name: string;
+}
+```
+
+`ICategory`와 `ITag` 엔티티 인터페이스는 비교적 간단하게 구성되어 있습니다. 그런데 PK 역할을 하는 id 필드를 [indexed access type](https://www.typescriptlang.org/docs/handbook/2/indexed-access-types.html)을 사용해서 `IBaseEntity` 인터페이스의 id 변수를 사용한 것을 볼 수 있습니다. 앞으로 모든 엔티티와 DTO를 설계할 때 상속(`extends`)을 사용하지 않고 indexed access types만 사용할 것입니다.
+
+fastify는 Querystring, Body, Params, Headers 4가지 요소를 각각 별도의 타입과 JSONSchema로 입력 받습니다. 그래서 DTO를 구성한다면 아래와 같이 구성할 수 있습니다.
+
+```ts
+import type { ICategory } from "#/database/interfaces/ICategory";
+import type { ICategory } from "#/database/interfaces/ICategory";
+import type { ITid } from "#/dto/common/ITid";
+
+/**
+ * CategoryDto of Pet, Store
+ */
+export interface ICategoryDto {
+  id: ICategory["id"];
+
+  name: ICategory["name"];
+}
+
+export interface IPostCategoryQuerystringDto {
+  tid: ITid["tid"];
+}
+
+export interface IPostCategoryBodyDto {
+  name: ICategory["name"];
+}
+```
+
+앞서 언급한 것과 같이 응답 모델로 사용할 DTO를 만들고, 이 후 Querystring, Body 등에 대한 DTO를 별도로 만들었습니다. indexed access type을 사용하면 DTO를 손쉽게 구축할 수 있습니다. 만약 M:N 관계를 가지는 `IPetDto` DTO를 작성하는 것도 어렵지 않습니다.
+
+```ts
+import type { IPet } from "#/database/interfaces/IPet";
+import type { ICategoryDto } from "#/dto/v1/category/ICategoryDto";
+import type { ITagDto } from "#/dto/v1/tag/ITagDto";
+
+export interface IPetDto {
+  id: IPet["id"];
+
+  name: IPet["name"];
+
+  category: ICategoryDto[];
+
+  tag: ITagDto[];
+}
+```
+
+이 방식의 DTO 작성은 boilerplate code 작성을 최소화합니다. 작성한 DTO는 fastify 타입 전달을 위해 꼭 필요한 것을 작성한 것입니다. 그리고 우리는 문서 자동화, 입력 값 검증 자동화를 위해 이 DTO를 JSONSchema로 변환할 것입니다. JSONSchema 변환을 위해서 다음과 같이 ts-json-schema-generator를 설치합니다.
+
+```bash
+npm i ts-json-schema-generator --save-dev
+```
+
+구조가 단순한 ICategoryDto를 먼저 변환해봅니다. ts-json-schema-generator는 필수 입력 값으로 파일 경로와 타입을 전달 받기 때문에 다음과 같이 실행합니다.
+
+```bash
+npx ts-json-schema-generator --path ./src/dto/v1/category/ICategoryDto.ts --type ICategoryDto --tsconfig ./tsconfig.json
+```
+
+re-map paths 기능을 사용해서 절대 경로를 사용하면 tsconfig.json 파일을 꼭 인자로 전달해야 합니다. 그리고 tsconfig.json 파일에 noEmit, emitDeclarationOnly 등의 옵션을 활성화하는 경우에 JSONSchema 파일이 생성되지 않으니 주의합니다. 성공적으로 JSONSchema 파일이 생성되었다면 다음과 같은 JSONSchema가 콘솔을 통해서 출력됩니다.
+
+```json
+{
+  "$ref": "#/definitions/ICategoryDto",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "ICategoryDto": {
+      "additionalProperties": false,
+      "description": "CategoryDto of Pet, Store",
+      "properties": {
+        "id": {
+          "description": "category id",
+          "type": "integer"
+        },
+        "name": {
+          "description": "category name",
+          "maxLength": 200,
+          "minLength": 2,
+          "type": "string"
+        }
+      },
+      "required": ["id", "name"],
+      "type": "object"
+    }
+  }
+}
+```
+
+이미 눈치챈 분도 있겠지만 주석이 있던 `@asType`과 `@maxLength`, `@minLength` 키워드가 JSONSchema에 추가된 것을 볼 수 있습니다. JSONSchema에 옵션으로 전달할 수 있는 다양한 규격, `maxLength` 외 `minItems`나 `maxItems`과 같은 규격을 추가할 수도 있습니다. optional 값으로 만들고 싶다면 DTO를 선언할 때 optional 값으로 선언하면 됩니다. 이 방법의 장점은 타입 선언과 OpenAPI spec. 그리고 Validation까지 모두 동일한 규격으로 유지된다는 점입니다. 그래서 타입을 바꿀때마다 JSONSchema를 잘 업데이트 한다면 OpenAPI spec.과 Validation이 항상 최신 상태로 잘 유지됩니다.
+
+하지만 예제로 첨부한 JSONSchema를 그대로 사용하는 경우 스키마를 찾을 수 없어서 fastify 실행이 되지 않습니다. querystring, body, params, headers에 전달하는 JSONSchema는 definitions에 첨부해서 사용하는 것이 아닌, JSONSchema 내용 그 자체 이어야 하기 때문입니다. 예를들면 아래와 같이 변경해야 합니다.
+
+<Tabs>
+  <TabItem value="as_is" label="AS-IS">
+
+    {
+      "$ref": "#/definitions/ICategoryDto",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "definitions": {
+        "ICategoryDto": {
+          "additionalProperties": false,
+          "description": "CategoryDto of Pet, Store",
+          "properties": {
+            "id": {
+              "description": "category id",
+              "type": "integer"
+            },
+            "name": {
+              "description": "category name",
+              "maxLength": 200,
+              "minLength": 2,
+              "type": "string"
+            }
+          },
+          "required": ["id", "name"],
+          "type": "object"
+        }
+      }
+    }
+
+  </TabItem>
+  <TabItem value="to_be" label="TO-BE" default>
+
+    {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": true,
+      "description": "CategoryDto of Pet, Store",
+      "properties": {
+        "id": {
+          "description": "category id",
+          "type": "integer"
+        },
+        "name": {
+          "description": "category name",
+          "maxLength": 200,
+          "minLength": 2,
+          "type": "string"
+        }
+      },
+      "required": ["id", "name"],
+      "type": "object"
+    }
+
+  </TabItem>
+</Tabs>
+
+fastify는 내부적으로 자체 JSONSchema 보관소를 가지고 있기 때문에 JSONSchema 보관소에 등록된 JSONSchema를 참조로 사용하거나, 위 예제와 같이 참조 구조가 없는 JSONSchema를 전달해야 합니다. 그렇지 않으면 내부 JSONSchema 보관소에서 스키마를 찾을 수 없어서 오류가 발생합니다. 그래서 ts-json-schema-generator를
