@@ -53,14 +53,6 @@ const config = {
           editCurrentVersion: false,
         },
         blog: false,
-        
-        // {
-        //   showReadingTime: true,
-        //   // Please change this to your repo.
-        //   // Remove this to remove the "edit this page" links.
-        //   editUrl:
-        //     'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
-        // },
         theme: {
           customCss: './src/css/custom.css',
         },
@@ -81,10 +73,6 @@ const config = {
       // image: 'img/docusaurus-social-card.jpg',
       navbar: {
         title: 'imjuni',
-        // logo: {
-        //   alt: 'imjuni homepage logo',
-        //   src: 'img/logo.svg',
-        // },
         items: [
           {
             type: 'docSidebar',
@@ -92,7 +80,6 @@ const config = {
             position: 'left',
             label: 'About',
           },
-          // {to: '/blog', label: 'Blog', position: 'left'},
           {
             href: "https://github.com/imjuni",
             label: 'GitHub',
@@ -116,30 +103,9 @@ const config = {
               },
             ],
           },
-          // {
-          //   title: 'Community',
-          //   items: [
-          //     {
-          //       label: 'Stack Overflow',
-          //       href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-          //     },
-          //     {
-          //       label: 'Discord',
-          //       href: 'https://discordapp.com/invite/docusaurus',
-          //     },
-          //     {
-          //       label: 'Twitter',
-          //       href: 'https://twitter.com/docusaurus',
-          //     },
-          //   ],
-          // },
           {
             title: 'More',
             items: [
-              // {
-              //   label: 'Blog',
-              //   to: '/blog',
-              // },
               {
                 label: 'GitHub',
                 href: "https://github.com/imjuni",
