@@ -98,10 +98,10 @@ Thus, `default export` can cause complicated syntax issues in library packages t
 Library package projects are useful when developing. With [npm](http://npmjs.com/), there are tons of library packages available. I've been creating and using libraries out of necessity, and in doing so, I've felt the need to organize how I go about scaffolding my library package projects. There's a lot of good material out there about setting up bundlers and overall scaffolding, but topics like Paths Re-Map and `.d.ts` bundling are relatively uninformed, so I've put together some thoughts on that. The following is by no means a definitive answer, but it's the way I apply it when working on library projects.
 
 1. Automatically generate an barrel file using [ctix](https://github.com/imjuni/ctix)
-1. Bundle `.d.ts` files using [dts-bundle-generator](https://github.com/timocov/dts-bundle-generator)
+1. Bundling `.d.ts` files using [rollup-plugin-dts](https://github.com/Swatinem/rollup-plugin-dts) and [tsc-alias](https://github.com/justkey007/tsc-alias)
 1. Bundling with [esbuild](https://esbuild.github.io/)
 1. use [vitest](https://vitest.dev/) or [jest](https://jestjs.io/) as a test runner
-   1. use [vite-tsconfig-paths](https://www.npmjs.com/package/vite-tsconfig-paths) to pass Path Re-Map
+   1. use [vite-tsconfig-paths](https://www.npmjs.com/package/vite-tsconfig-paths) to pass [Paths Re-Map](https://kulshekhar.github.io/ts-jest/docs/getting-started/paths-mapping/)
    1. use [ts-jest](https://kulshekhar.github.io/ts-jest/) and set up [Paths Re-Map](https://kulshekhar.github.io/ts-jest/docs/getting-started/paths-mapping/)
 
 I've uploaded the [typescript-lib-boilerplate](https://github.com/imjuni/typescript-lib-boilerplate) repo.for your reference. How do you guys work when developing library projects? If you have any good tips, please let me know, thanks!
