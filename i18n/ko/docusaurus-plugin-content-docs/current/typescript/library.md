@@ -78,10 +78,15 @@ barrel 파일 자동화를 위해 오랜 시간 노력을 기울여왔으며, �
 * [rollup-plugin-dts](https://github.com/Swatinem/rollup-plugin-dts)
 * [rollup-plugin-ts](https://github.com/wessberg/rollup-plugin-ts)
 * [tsc-prog](https://github.com/jeremyben/tsc-prog)
+* [tsc-alias](https://github.com/justkey007/tsc-alias)
 
-위에서 나열한 것보다 더 많은 도구가 있습니다. 앞서 언급된 [논의](https://github.com/Microsoft/TypeScript/issues/4433)를 통해 다양한 도구들을 확인할 수 있습니다. 하지만 이들 중 적합한 도구를 선택하는 과정은 각자의 프로젝트 요구에 맞게 직접 실험해보고 결정해야 한다는 점이 아쉽습니다. 예를 들어, dts-bundle-generator, api-extractor, rollup-plugin-dts는 `.d.ts.map` 파일을 지원하지 않습니다. 또한, api-extractor와 dts-bundle-generator에는 chunking 기능이 없으며, rollup-plugin-dts는 현재 유지보수 모드입니다. 그리고 `default export`와 `export` 문장은 번들러마다의 결과물 생성 방식이 다릅니다. 따라서, 프로젝트의 구성에 따라 가장 적합한 도구를 신중하게 선택하여 사용해야 합니다.
+위에서 나열한 것보다 더 많은 도구가 있습니다. 번들링에 대한 [논의](https://github.com/Microsoft/TypeScript/issues/4433)와 [비교](https://github.com/timocov/dts-bundle-generator/discussions/68)를 통해 여러가지 도구들을 확인할 수 있습니다. 하지만 이들 중 적합한 도구를 선택하는 과정은 각자의 프로젝트 요구에 맞게 직접 실험해보고 결정해야 한다는 점이 아쉽습니다. 예를 들어, [dts-bundle-generator](https://github.com/timocov/dts-bundle-generator), [API Extractor](https://api-extractor.com/), [rollup-plugin-dts](https://github.com/Swatinem/rollup-plugin-dts)는 `.d.ts.map` 파일을 지원하지 않습니다. 또한, [API Extractor](https://api-extractor.com/)와 [dts-bundle-generator](https://github.com/timocov/dts-bundle-generator)에는 chunking 기능이 없으며, [rollup-plugin-dts](https://github.com/Swatinem/rollup-plugin-dts)는 현재 유지보수 모드입니다. 그리고 `default export`와 `export` 문장은 번들러마다의 결과물 생성 방식이 다릅니다. 따라서, 프로젝트의 구성에 따라 가장 적합한 도구를 신중하게 선택하여 사용해야 합니다.
 
-저는 Barrel 파일 생성을 위해 [ctix](https://github.com/imjuni/ctix)를 사용하고, 번들링을 위해서는 [dts-bundle-generator](https://github.com/timocov/dts-bundle-generator)를 활용합니다. 하지만 이 방법은 여러 패키지로 구성된 모노레포나 `tsconfig`에 `composite` 옵션이 설정된 경우에는 적합하지 않을 수 있습니다. 현재 진행 중인 라이브러리 패키지에 [ctix](https://github.com/imjuni/ctix)나 `.d.ts` 번들링 도구를 도입하기 전에 반드시 테스트를 진행하고 적합한지 확인한 후 적용하는 것이 중요합니다.
+[dts-bundle-generator](https://github.com/timocov/dts-bundle-generator)는 가볍고 쉬운 도구 입니다. [ctix](https://github.com/imjuni/ctix)를 사용하여 생성된 배럴 파일을 dts-bundle-generator에 전달하고 출력 파일 경로만 지정하면, 대부분의 경우 추가적인 설정 없이 잘 작동합니다. 그러나 백엔드 개발에서 최신 버전의 Fastify를 사용하는 경우, `Symbol.asyncDispose`를 찾지 못해 번들링이 실패하는 문제가 발생할 수 있습니다. 이는 [dts-bundle-generator](https://github.com/timocov/dts-bundle-generator)가 성능 최적화를 위해 필수적인 모듈만 로딩하는 방식 때문에 일부 `.d.ts` 파일을 로드하지 못하는 현상 때문입니다. 이와 관련된 [해결 방안](https://github.com/timocov/dts-bundle-generator/discussions/232)이 논의되고 있지만, 제 경우에는 이 방법이 동작하지 않았습니다. 그럼에도 불구하고, 이 도구는 대체로 잘 작동하며 간단한 옵션 설정만으로 쉽게 사용할 수 있어, 도입을 고려 중이시라면 실제 환경에서의 테스트를 권장합니다.
+
+[rollup-plugin-dts](https://github.com/Swatinem/rollup-plugin-dts)는 현재 운영 모드에 있지만, 여전히 잘 작동하는 플러그인입니다. 하지만, 이 플러그인은 Paths Re-Map을 사용하지 않는 `.d.ts` 파일에 대해서만 정상적으로 번들링을 수행합니다. 그런데, [@rollup/plugin-typescript](https://github.com/rollup/plugins/tree/master/packages/typescript)을 사용해 `.d.ts` 파일을 생성하더라도, Paths Re-Map이 완전히 해결되지 않습니다. 이를 위해 [tsc-alias](https://github.com/justkey007/tsc-alias)를 사용하여 Paths Re-Map 문제를 해결해야 합니다. Paths Re-Map을 해결한 후에는 [rollup-plugin-ts](https://github.com/wessberg/rollup-plugin-ts)를 이용해 번들링하면 `.d.ts` 파일이 잘 생성됩니다. 하지만, 이 방법을 사용하더라도 `.map` 파일 생성 기능과 `chunking` 기능은 사용할 수 없습니다. 라이브러리 프로젝트가 종종 JavaScript 프로젝트의 일부로 번들링되는 것을 고려했을 때, 이러한 제한은 받아들일 수 있는 범위라고 생각합니다.
+
+저는 Barrel 파일 생성을 위해 [ctix](https://github.com/imjuni/ctix)를 사용하고, 번들링을 위해서는 [rollup-plugin-dts](https://github.com/Swatinem/rollup-plugin-dts)와 [tsc-alias](https://github.com/justkey007/tsc-alias)를 활용합니다. 하지만 이 방법은 여러 패키지로 구성된 모노레포나 `tsconfig`에 `composite` 옵션이 설정된 경우에는 적합하지 않을 수 있습니다. 현재 진행 중인 라이브러리 패키지에 [ctix](https://github.com/imjuni/ctix)나 `.d.ts` 번들링 도구를 도입하기 전에 반드시 테스트를 진행하고 적합한지 확인한 후 적용하는 것이 중요합니다.
 
 ### export, default export
 
@@ -94,7 +99,7 @@ barrel 파일 자동화를 위해 오랜 시간 노력을 기울여왔으며, �
 라이브러리 패키지 프로젝트는 개발할 때 유용합니다. [npm](http://npmjs.com/)에서는 사용가능한 정말 많은 라이브러리 패키지가 있습니다. 저 역시 필요에 따라 라이브러리를 만들어 사용하고 있으며, 이 과정에서 라이브러리 패키지 프로젝트 스케폴딩 방법에 대한 정리의 필요성을 느꼈습니다. 번들러 설정이나 전반적인 스케폴딩에 대해서는 이미 많은 좋은 자료가 있지만, Paths Re-Map이나 `.d.ts` 번들링과 같은 주제는 정보가 상대적으로 부족하여 이에 대해 정리해보았습니다. 아래 내용은 정답이라고 할 수는 없지만, 제가 라이브러리 프로젝트를 진행할 때 적용하는 방식입니다.
 
 1. [ctix](https://github.com/imjuni/ctix)를 사용해서 barrel 파일을 자동 생성
-1. [dts-bundle-generator](https://github.com/timocov/dts-bundle-generator)를 사용하여 `.d.ts` 파일 번들링
+1. [rollup-plugin-dts](https://github.com/Swatinem/rollup-plugin-dts)와 [tsc-alias](https://github.com/justkey007/tsc-alias)를 사용하여 `.d.ts` 파일 번들링
 1. [esbuild](https://esbuild.github.io/)를 사용하여 번들링
 1. [vitest](https://vitest.dev/)를 또는 [jest](https://jestjs.io/) test runner로 사용
    1. [vite-tsconfig-paths](https://www.npmjs.com/package/vite-tsconfig-paths)를 사용해 Path Re-Map 전달
