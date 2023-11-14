@@ -11,7 +11,7 @@ locale: ko
 - [TypeScript Deep Dive - barrel](https://basarat.gitbook.io/typescript/main-1/barrel)
 - [How we optimized package imports in Next.js](https://vercel.com/blog/how-we-optimized-package-imports-in-next-js)
 
-### 개발자가 직접 barrel 파일을 작성할 때 문제점
+## 개발자가 직접 barrel 파일을 작성할 때 문제점
 
 처음에는 대부분 배럴 파일을 직접 작성할 것입니다. 하지만 꽤 반복적인 작업이기 때문에 자동화를 할 수 있는 도구를 한 번쯤 찾아보게 됩니다. 배럴 파일을 자동으로 작성하는 몇 가지 도구가 있습니다.
 
@@ -29,7 +29,7 @@ locale: ko
 
 이러한 점들을 고려했을 때, 디렉토리 탐색과 파일 이름 기반의 접근법은 빠르고 간편하지만, 복잡한 프로젝트에서는 유용하지 않을 수 있다는 결론에 이르렀습니다. 이에 다른 접근 방식의 필요성을 느끼게 되었습니다.
 
-### 타입스크립트 컴파일러 API를 사용한 자동화
+## 타입스크립트 컴파일러 API를 사용한 자동화
 
 초기에는 디렉토리 탐색과 파일 이름 기반의 접근법으로 문제를 해결하려 했습니다. 이를 위해 [create-ts-index](https://github.com/imjuni/create-ts-index)를 개발하고 사용했지만, 앞서 언급한 문제들을 경험하며 이 방법의 한계를 느꼈습니다. 이에 개선이 필요하다고 판단하고, [ctix](https://github.com/imjuni/ctix)를 개발하여 사용하게 되었습니다. ctix는 [타입스크립트 컴파일러 API](https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API)를 활용하여 배럴 파일을 생성합니다. 이 방식을 통해 앞서 언급한 대부분의 문제를 해결할 수 있었습니다.
 

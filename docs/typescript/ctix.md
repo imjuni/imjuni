@@ -10,7 +10,7 @@ In the past, I've written barrel files for various open source projects and work
 - [TypeScript Deep Dive - barrel](https://basarat.gitbook.io/typescript/main-1/barrel)
 - [How we optimized package imports in Next.js](https://vercel.com/blog/how-we-optimized-package-imports-in-next-js)
 
-### Problems when developers write their own barrel files
+## Problems when developers write their own barrel files
 
 At first, you'll probably write most of your barrel files by hand, but since it's a fairly repetitive task, you'll probably want to find a tool to automate it. There are a couple of tools to automatically write barrel files.
 
@@ -28,7 +28,7 @@ These tools also have the limitation of not being recognized for empty files or 
 
 Considering these points, I came to the conclusion that while directory traversal and filename-based approaches are quick and easy, they may not be useful in complex projects. I recognized the need for a different approach.
 
-### Automate barrel file writing with the TypeScript Compiler API
+## Automate barrel file writing with the TypeScript Compiler API
 
 At first, I tried to solve the problem with a directory traversal and filename-based approach. I developed and used [create-ts-index](https://github.com/imjuni/create-ts-index) for this purpose, but after experiencing the previously mentioned issues, I recognized the limitations of this approach. I decided that it needed to be improved, so I developed and used [ctix](https://github.com/imjuni/ctix). ctix utilizes the [Typescript Compiler API](https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API) to write barrel files. This approach solved most of the problems I mentioned earlier.
 
