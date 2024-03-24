@@ -5,7 +5,7 @@ sidebar_position: 3
 
 ## Background
 
-Node.js를 사용한 Backend RESTful API 개발은
+Node.js를 사용한 Backend RESTful API 개발은 
 
 Node.js와 TypeScript를 사용한 웹 프레임워크 중에서는 [unopinionated](https://stackoverflow.com/questions/802050/what-is-opinionated-software) 프레임워크가 많습니다. [express](https://expressjs.com/), [koa](https://koajs.com/) 및 [fastify](https://fastify.dev/) 등이 이에 해당합니다. 프로젝트를 진행할 때, 개발자 간의 협업이 일반적이며, 이때 통일된 코드 작성 규칙이 없으면 프로젝트의 성공 가능성이 줄어듭니다. 따라서 unopinionated 프레임워크를 사용할 때는 코드 작성 규칙을 명시하기 위해 [boilerplate code](https://en.wikipedia.org/wiki/Boilerplate_code)를 많이 작성하게 되는데, 이러한 반복적인 코드 작성은 Node.js와 TypeScript의 생산성이 떨어지게 합니다.
 
